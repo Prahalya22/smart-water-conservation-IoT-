@@ -1,0 +1,91 @@
+#define echoPin 11
+#define trigPin 12
+#include<Servo.h>
+Servo Myservo;
+const int capteur_D = 4;
+const int capteur_A = A0;
+int val_analogique;
+int pos=0;
+int sensorPin = A1; 
+int sensorValue;  
+int limit = 300; 
+
+
+long duration;
+int distance; 
+const int RELAY_PIN = 5; 
+void setup() {
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT); 
+  pinMode(RELAY_PIN, OUTPUT);  
+  Serial.begin(9600); 
+  Myservo.attach(6);
+  pinMode(capteur_D, INPUT);
+  pinMode(capteur_A, INPUT);
+  Serial.begin(9600);
+ pinMode(13, OUTPUT);
+}
+void loop() {
+  //Tank Empty
+  digitalWrite(trigPin, LOW);
+   digitalWrite(RELAY_PIN, LOW);  
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH);
+  distance = duration * 0.034 / 2;
+  if(distance>7){//>10
+    digitalWrite(RELAY_PIN, HIGH);       
+  }
+  else if(distance<3){//<5
+     digitalWrite(RELAY_PIN, LOW); 
+  }
+  Serial.print("Distance Tank: ");
+  Serial.print(distance);
+  Serial.println(" cm");
+  delay(1000);
+  //Tank Empty End
+
+  //Rain Fill
+  if(digitalRead(capteur_D) == LOW) 
+  {
+    Serial.println("Digital value Rain : wet"); 
+    for(;pos<=90;pos++){
+      Myservo.write(pos);
+      //Serial.println("Servo Run to 90");
+      delay(15);
+    } 
+  }
+else
+  {
+    Serial.println("Digital value Rain : dry");
+      for(;pos>=0;pos--){
+      Myservo.write(pos);
+      //Serial.println("Servo Run to 0");
+      delay(15);
+    }
+    delay(10); 
+  }
+  val_analogique=analogRead(capteur_A); 
+  Serial.print("Analog value Rain : ");
+  Serial.println(val_analogique); 
+  Serial.println("");
+  delay(1000);
+  //Rain Fill End
+
+  //Soil Moisture
+  sensorValue = analogRead(sensorPin); 
+ Serial.print("Analog Value Soil : ");
+ Serial.println(sensorValue);
+ 
+ if (sensorValue<limit) {
+ digitalWrite(13, LOW); 
+ }
+ else {
+ digitalWrite(13, HIGH); 
+ }
+ 
+ delay(1000); 
+ //Soil Mositure End
+}
